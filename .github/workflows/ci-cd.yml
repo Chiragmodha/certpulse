@@ -1,0 +1,81 @@
+name: CertPulse CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # Job 1: Test and Build the Go Backend
+  backend-ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+          cache-dependency-path: backend/go.sum
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          go mod download
+
+      - name: Verify Go Build
+        run: |
+          cd backend
+          go build -v -o /dev/null .
+
+  # Job 2: Test and Build the Next.js Frontend
+  frontend-ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package.json
+
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm ci || npm install
+
+      - name: Build Next.js
+        run: |
+          cd frontend
+          npm run build
+
+  # Job 3: Continuous Deployment to Linux VPS
+  deploy:
+    needs: [backend-ci, frontend-ci]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Deploy to VPS via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_PORT || 22 }}
+          script: |
+            # Navigate to deploy directory
+            cd /opt/certpulse
+            
+            # Fetch latest updates from remote main branch
+            git pull origin main
+            
+            # Build and deploy service containers in detached mode
+            docker compose up -d --build
+            
+            # Prune obsolete images to reclaim disk space
+            docker image prune -f

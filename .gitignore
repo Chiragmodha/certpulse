@@ -1,0 +1,35 @@
+# Dependency directories
+node_modules/
+jspm_packages/
+web_modules/
+
+# Next.js build output
+.next/
+out/
+
+# Local databases / Docker volumes
+pgdata/
+redisdata/
+
+# OS metadata
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Environment secret files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Go binary build files and logs
+backend/certpulse-api
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+*.log
