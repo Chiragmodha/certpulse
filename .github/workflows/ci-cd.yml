@@ -63,9 +63,9 @@ jobs:
       - name: Deploy to VPS via SSH
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.43.204.126.128 }}
+          host: ${{ secrets.'43.204.126.128' }}
           username: ${{ secrets.ubuntu }}
-          key: ${{ secrets.~/.ssh/authorized_keys }}
+          key: ${{ secrets.'~/.ssh/authorized_keys' }}
           port: ${{ secrets.DEPLOY_PORT || 22 }}
           script: |
             # Navigate to deploy directory
